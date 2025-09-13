@@ -1,0 +1,7 @@
+# Optional storage dependencies
+psycopg2>=2.9.7
+asyncpg>=0.28.0
+pymongo>=4.5.0
+motor>=3.3.1
+pyodbc>=4.0.39
+pandas>=2.1.1
