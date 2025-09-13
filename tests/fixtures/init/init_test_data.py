@@ -282,7 +282,7 @@ def main():
         init_elasticsearch()
         init_minio()
 
-        print("\\n🎉 All test backends initialized successfully!")
+        print("\n🎉 All test backends initialized successfully!")
 
         # Create status file
         with open("/tmp/init_complete", "w") as f:
