@@ -1,0 +1,322 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://scraper.example.com/schemas/workflow.json",
+  "title": "Web Scraping Workflow",
+  "description": "JSON schema for web scraping workflow configuration",
+  "type": "object",
+  "required": ["version", "metadata", "scraping", "storage", "steps"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the workflow schema"
+    },
+    "metadata": {
+      "$ref": "#/definitions/WorkflowMetadata"
+    },
+    "scraping": {
+      "$ref": "#/definitions/ScrapingConfig"
+    },
+    "storage": {
+      "$ref": "#/definitions/StorageConfig"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/WorkflowStep"
+      }
+    },
+    "postProcessing": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PostProcessingStep"
+      }
+    }
+  },
+  "definitions": {
+    "WorkflowMetadata": {
+      "type": "object",
+      "required": ["name", "description", "author", "targetSite"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500,
+          "minLength": 1
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          }
+        },
+        "targetSite": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "ScrapingConfig": {
+      "type": "object",
+      "required": ["provider", "config"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["playwright", "cheerio", "puppeteer"]
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "browser": {
+              "type": "string",
+              "enum": ["chromium", "firefox", "webkit"],
+              "default": "chromium"
+            },
+            "headless": {
+              "type": "boolean",
+              "default": true
+            },
+            "userAgent": {
+              "type": "string"
+            },
+            "viewport": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "integer",
+                  "minimum": 320
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 240
+                }
+              }
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 30000
+            },
+            "rateLimit": {
+              "type": "object",
+              "properties": {
+                "requestsPerSecond": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 10
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "StorageConfig": {
+      "type": "object",
+      "required": ["provider", "config"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["csv", "postgresql", "mongodb", "mssql", "json"]
+        },
+        "config": {
+          "type": "object",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/CsvStorageConfig"
+            },
+            {
+              "$ref": "#/definitions/PostgreSQLStorageConfig"
+            },
+            {
+              "$ref": "#/definitions/MongoDBStorageConfig"
+            },
+            {
+              "$ref": "#/definitions/MSSQLStorageConfig"
+            },
+            {
+              "$ref": "#/definitions/JsonStorageConfig"
+            }
+          ]
+        }
+      }
+    },
+    "WorkflowStep": {
+      "type": "object",
+      "required": ["id", "command", "config"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "command": {
+          "type": "string",
+          "enum": ["init", "discover", "extract", "paginate"]
+        },
+        "config": {
+          "type": "object"
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "default": 30000
+        },
+        "continueOnError": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "PostProcessingStep": {
+      "type": "object",
+      "required": ["type", "config"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["filter", "transform", "validate", "deduplicate"]
+        },
+        "config": {
+          "type": "object"
+        }
+      }
+    },
+    "CsvStorageConfig": {
+      "type": "object",
+      "required": ["filePath"],
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "delimiter": {
+          "type": "string",
+          "default": ","
+        },
+        "headers": {
+          "type": "boolean",
+          "default": true
+        },
+        "append": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "PostgreSQLStorageConfig": {
+      "type": "object",
+      "required": ["connectionString", "tableName"],
+      "properties": {
+        "connectionString": {
+          "type": "string"
+        },
+        "tableName": {
+          "type": "string"
+        },
+        "createTable": {
+          "type": "boolean",
+          "default": true
+        },
+        "batchSize": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1000
+        }
+      }
+    },
+    "MongoDBStorageConfig": {
+      "type": "object",
+      "required": ["connectionString", "database", "collection"],
+      "properties": {
+        "connectionString": {
+          "type": "string"
+        },
+        "database": {
+          "type": "string"
+        },
+        "collection": {
+          "type": "string"
+        },
+        "upsert": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "MSSQLStorageConfig": {
+      "type": "object",
+      "required": ["server", "database", "tableName"],
+      "properties": {
+        "server": {
+          "type": "string"
+        },
+        "database": {
+          "type": "string"
+        },
+        "tableName": {
+          "type": "string"
+        },
+        "authentication": {
+          "type": "object",
+          "oneOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "windows"
+                }
+              }
+            },
+            {
+              "properties": {
+                "type": {
+                  "const": "sql"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": ["username", "password"]
+            }
+          ]
+        }
+      }
+    },
+    "JsonStorageConfig": {
+      "type": "object",
+      "required": ["filePath"],
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "pretty": {
+          "type": "boolean",
+          "default": true
+        },
+        "append": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}
