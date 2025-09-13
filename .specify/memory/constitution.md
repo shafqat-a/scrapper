@@ -114,7 +114,7 @@ All code must pass through GitHub Actions CI/CD:
 - Automated test execution on every push
 - Required checks must pass before merge:
   - Unit tests
-  - Integration tests  
+  - Integration tests
   - Playwright E2E tests
   - Code coverage threshold
   - Linting and formatting

@@ -3,11 +3,15 @@ Provider Interface Contracts
 These Python classes and protocols define the contracts that all providers must implement.
 """
 
+# Standard library imports
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Protocol, Literal
-from pydantic import BaseModel, Field
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, Protocol
+
+# Third-party imports
+from pydantic import BaseModel, Field
+
 
 # Common Types
 class ProviderMetadata(BaseModel):
@@ -16,9 +20,12 @@ class ProviderMetadata(BaseModel):
     type: Literal["scraping", "storage"]
     capabilities: List[str]
 
+
 class ConnectionConfig(BaseModel):
     """Base configuration for provider connections."""
+
     pass
+
 
 class Cookie(BaseModel):
     name: str
@@ -29,9 +36,11 @@ class Cookie(BaseModel):
     http_only: bool = False
     secure: bool = False
 
+
 class Viewport(BaseModel):
     width: int = Field(ge=320)
     height: int = Field(ge=240)
+
 
 class PageContext(BaseModel):
     url: str
@@ -41,11 +50,13 @@ class PageContext(BaseModel):
     viewport: Viewport = Viewport(width=1920, height=1080)
     user_agent: str = "scrapper/1.0.0"
 
+
 class ElementMetadata(BaseModel):
     selector: str
     source_url: str
     timestamp: datetime
     xpath: Optional[str] = None
+
 
 class DataElement(BaseModel):
     id: str
@@ -53,31 +64,36 @@ class DataElement(BaseModel):
     value: Any
     metadata: ElementMetadata
 
+
 # Step Configuration Types
 class InitStepConfig(BaseModel):
     url: str = Field(..., description="Target URL to navigate to")
-    wait_for: Optional[str | int] = Field(None, description="CSS selector or milliseconds to wait")
+    wait_for: Optional[str | int] = Field(
+        None, description="CSS selector or milliseconds to wait"
+    )
     cookies: List[Cookie] = []
     headers: Dict[str, str] = {}
 
+
 class DiscoverStepConfig(BaseModel):
     selectors: Dict[str, str] = Field(
-        ...,
-        description="CSS selectors for different element types"
+        ..., description="CSS selectors for different element types"
     )
     pagination: Optional[Dict[str, Any]] = None
 
+
 class ExtractStepConfig(BaseModel):
     elements: Dict[str, Dict[str, Any]] = Field(
-        ...,
-        description="Element extraction configuration"
+        ..., description="Element extraction configuration"
     )
+
 
 class PaginateStepConfig(BaseModel):
     next_page_selector: str = Field(..., description="CSS selector for next page link")
     max_pages: Optional[int] = Field(None, ge=1)
     wait_after_click: int = Field(default=1000, ge=0)
     stop_condition: Optional[Dict[str, Any]] = None
+
 
 # Scraping Provider Protocol
 class ScrapingProvider(Protocol):
@@ -94,25 +110,19 @@ class ScrapingProvider(Protocol):
         ...
 
     async def execute_discover(
-        self,
-        step_config: DiscoverStepConfig,
-        context: PageContext
+        self, step_config: DiscoverStepConfig, context: PageContext
     ) -> List[DataElement]:
         """Discover available data elements on the page."""
         ...
 
     async def execute_extract(
-        self,
-        step_config: ExtractStepConfig,
-        context: PageContext
+        self, step_config: ExtractStepConfig, context: PageContext
     ) -> List[DataElement]:
         """Extract specific data elements from the page."""
         ...
 
     async def execute_paginate(
-        self,
-        step_config: PaginateStepConfig,
-        context: PageContext
+        self, step_config: PaginateStepConfig, context: PageContext
     ) -> Optional[PageContext]:
         """Navigate to next page if available. Returns new context or None."""
         ...
@@ -125,16 +135,14 @@ class ScrapingProvider(Protocol):
         """Health check for provider availability."""
         ...
 
+
 # Abstract Base Class for Scraping Providers
 class BaseScraper(ABC):
     """Abstract base class for scraping providers."""
 
     def __init__(self):
         self.metadata = ProviderMetadata(
-            name="base-scraper",
-            version="1.0.0",
-            type="scraping",
-            capabilities=[]
+            name="base-scraper", version="1.0.0", type="scraping", capabilities=[]
         )
 
     @abstractmethod
@@ -147,25 +155,19 @@ class BaseScraper(ABC):
 
     @abstractmethod
     async def execute_discover(
-        self,
-        step_config: DiscoverStepConfig,
-        context: PageContext
+        self, step_config: DiscoverStepConfig, context: PageContext
     ) -> List[DataElement]:
         pass
 
     @abstractmethod
     async def execute_extract(
-        self,
-        step_config: ExtractStepConfig,
-        context: PageContext
+        self, step_config: ExtractStepConfig, context: PageContext
     ) -> List[DataElement]:
         pass
 
     @abstractmethod
     async def execute_paginate(
-        self,
-        step_config: PaginateStepConfig,
-        context: PageContext
+        self, step_config: PaginateStepConfig, context: PageContext
     ) -> Optional[PageContext]:
         pass
 
@@ -177,6 +179,7 @@ class BaseScraper(ABC):
         """Default health check implementation."""
         return True
 
+
 # Storage Provider Types
 class SchemaField(BaseModel):
     type: Literal["string", "number", "boolean", "date", "json"]
@@ -184,10 +187,12 @@ class SchemaField(BaseModel):
     max_length: Optional[int] = None
     index: bool = False
 
+
 class SchemaIndex(BaseModel):
     name: str
     fields: List[str]
     unique: bool = False
+
 
 class SchemaDefinition(BaseModel):
     name: str
@@ -195,16 +200,19 @@ class SchemaDefinition(BaseModel):
     primary_key: List[str] = []
     indexes: List[SchemaIndex] = []
 
+
 class QueryCriteria(BaseModel):
     where: Dict[str, Any] = {}
     order_by: List[Dict[str, str]] = []  # [{"field": "name", "direction": "ASC"}]
     limit: Optional[int] = None
     offset: Optional[int] = None
 
+
 class StorageStats(BaseModel):
     total_records: int
     last_updated: datetime
     storage_size: Optional[int] = None
+
 
 # Storage Provider Protocol
 class StorageProvider(Protocol):
@@ -225,9 +233,7 @@ class StorageProvider(Protocol):
         ...
 
     async def query(
-        self,
-        criteria: QueryCriteria,
-        schema: SchemaDefinition
+        self, criteria: QueryCriteria, schema: SchemaDefinition
     ) -> List[DataElement]:
         """Query stored data."""
         ...
@@ -256,16 +262,14 @@ class StorageProvider(Protocol):
         """Get storage statistics."""
         ...
 
+
 # Abstract Base Class for Storage Providers
 class BaseStorage(ABC):
     """Abstract base class for storage providers."""
 
     def __init__(self):
         self.metadata = ProviderMetadata(
-            name="base-storage",
-            version="1.0.0",
-            type="storage",
-            capabilities=[]
+            name="base-storage", version="1.0.0", type="storage", capabilities=[]
         )
 
     @abstractmethod
@@ -282,9 +286,7 @@ class BaseStorage(ABC):
 
     @abstractmethod
     async def query(
-        self,
-        criteria: QueryCriteria,
-        schema: SchemaDefinition
+        self, criteria: QueryCriteria, schema: SchemaDefinition
     ) -> List[DataElement]:
         pass
 
@@ -302,10 +304,8 @@ class BaseStorage(ABC):
 
     async def get_stats(self) -> StorageStats:
         """Default stats implementation."""
-        return StorageStats(
-            total_records=0,
-            last_updated=datetime.now()
-        )
+        return StorageStats(total_records=0, last_updated=datetime.now())
+
 
 # Workflow Types
 class WorkflowMetadata(BaseModel):
@@ -316,14 +316,17 @@ class WorkflowMetadata(BaseModel):
     tags: List[str] = []
     target_site: str = Field(..., description="Target website URL")
 
+
 class ScrapingConfig(BaseModel):
     provider: str
     config: Dict[str, Any]
+
 
 class StorageConfig(BaseModel):
     provider: str
     config: Dict[str, Any]
     schema: Optional[SchemaDefinition] = None
+
 
 class WorkflowStep(BaseModel):
     id: str = Field(..., pattern=r"^[a-zA-Z0-9_-]+$")
@@ -333,9 +336,11 @@ class WorkflowStep(BaseModel):
     timeout: int = Field(default=30000, gt=0)
     continue_on_error: bool = False
 
+
 class PostProcessingStep(BaseModel):
     type: Literal["filter", "transform", "validate", "deduplicate"]
     config: Dict[str, Any]
+
 
 class Workflow(BaseModel):
     version: str = Field(..., pattern=r"^\d+\.\d+\.\d+$")
@@ -345,11 +350,13 @@ class Workflow(BaseModel):
     steps: List[WorkflowStep] = Field(..., min_length=1)
     post_processing: Optional[List[PostProcessingStep]] = None
 
+
 # Execution Result Types
 class StepError(BaseModel):
     code: str
     message: str
     stack: Optional[str] = None
+
 
 class StepResult(BaseModel):
     step_id: str
@@ -361,10 +368,12 @@ class StepResult(BaseModel):
     error: Optional[StepError] = None
     retry_count: int = 0
 
+
 class WorkflowError(BaseModel):
     step: str
     message: str
     recoverable: bool
+
 
 class WorkflowResult(BaseModel):
     workflow_id: str
@@ -376,6 +385,7 @@ class WorkflowResult(BaseModel):
     total_records: int
     storage: Dict[str, str]  # provider and location info
     errors: List[WorkflowError] = []
+
 
 # Provider Factory Protocol
 class ProviderFactory(Protocol):
@@ -390,8 +400,7 @@ class ProviderFactory(Protocol):
         ...
 
     async def list_providers(
-        self,
-        type_filter: Optional[Literal["scraping", "storage"]] = None
+        self, type_filter: Optional[Literal["scraping", "storage"]] = None
     ) -> List[ProviderMetadata]:
         """List available providers."""
         ...
@@ -403,6 +412,7 @@ class ProviderFactory(Protocol):
     async def test_provider(self, name: str, config: ConnectionConfig) -> bool:
         """Test provider connectivity."""
         ...
+
 
 # Workflow Engine Protocol
 class WorkflowEngine(Protocol):
@@ -424,6 +434,7 @@ class WorkflowEngine(Protocol):
         """Cancel running workflow."""
         ...
 
+
 # Configuration Classes for different storage types
 class CSVStorageConfig(ConnectionConfig):
     file_path: str
@@ -431,11 +442,13 @@ class CSVStorageConfig(ConnectionConfig):
     headers: bool = True
     append: bool = False
 
+
 class PostgreSQLStorageConfig(ConnectionConfig):
     connection_string: str
     table_name: str
     create_table: bool = True
     batch_size: int = Field(default=1000, ge=1)
+
 
 class MongoDBStorageConfig(ConnectionConfig):
     connection_string: str
@@ -443,10 +456,12 @@ class MongoDBStorageConfig(ConnectionConfig):
     collection: str
     upsert: bool = False
 
+
 class SQLiteStorageConfig(ConnectionConfig):
     database_path: str
     table_name: str
     create_table: bool = True
+
 
 # Configuration Classes for scraping providers
 class ScrapyConfig(ConnectionConfig):
@@ -456,12 +471,14 @@ class ScrapyConfig(ConnectionConfig):
     user_agent: Optional[str] = None
     robotstxt_obey: bool = True
 
+
 class PlaywrightConfig(ConnectionConfig):
     browser: Literal["chromium", "firefox", "webkit"] = "chromium"
     headless: bool = True
     viewport: Viewport = Viewport(width=1920, height=1080)
     user_agent: Optional[str] = None
     timeout: int = Field(default=30000, gt=0)
+
 
 class BeautifulSoupConfig(ConnectionConfig):
     parser: Literal["html.parser", "lxml", "html5lib"] = "lxml"
