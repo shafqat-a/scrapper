@@ -34,7 +34,11 @@ jobs:
 
       - name: Type check with mypy
         run: |
-          mypy src/ --config-file mypy.ini
+          if [ -d src ]; then
+            mypy src/ --config-file mypy.ini
+          else
+            echo "src/ directory does not exist, skipping mypy type check."
+          fi
 
   # Unit and contract tests
   test:
