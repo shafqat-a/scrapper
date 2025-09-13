@@ -2,28 +2,19 @@
 PageContext and browser-related models for the web scraper system.
 These models define the structure for browser context and viewport information.
 """
-
 # Standard library imports
 from typing import List
-
 # Third-party imports
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, ConfigDict
 # Local folder imports
 # Local imports - Cookie is already defined in workflow_step.py
 from .workflow_step import Cookie
-
-
 class Viewport(BaseModel):
     """Browser viewport dimensions."""
-
     width: int = Field(ge=320, le=7680, description="Viewport width in pixels")
     height: int = Field(ge=240, le=4320, description="Viewport height in pixels")
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {"width": 1920, "height": 1080},  # Desktop HD
                 {"width": 1366, "height": 768},  # Laptop
@@ -32,11 +23,9 @@ class Viewport(BaseModel):
                 {"width": 768, "height": 1024},  # iPad
             ]
         }
-
-
+    )
 class PageContext(BaseModel):
     """Current page context during web scraping session."""
-
     url: str = Field(..., min_length=1, description="Current page URL")
     title: str = Field(..., description="Page title")
     cookies: List[Cookie] = Field(
@@ -50,10 +39,8 @@ class PageContext(BaseModel):
         description="Browser viewport dimensions",
     )
     user_agent: str = Field(default="scrapper/1.0.0", description="User agent string")
-
-    class Config:
-        """Pydantic configuration."""
-
+    model_config = ConfigDict(
+        
         json_schema_extra = {
             "examples": [
                 {

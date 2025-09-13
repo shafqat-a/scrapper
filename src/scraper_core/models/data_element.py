@@ -2,18 +2,13 @@
 DataElement and ElementMetadata models for the web scraper system.
 These models define the structure for scraped data elements and their metadata.
 """
-
 # Standard library imports
 from datetime import datetime
 from typing import Any, Literal, Optional
-
 # Third-party imports
-from pydantic import BaseModel, Field
-
-
+from pydantic import BaseModel, Field, ConfigDict
 class ElementMetadata(BaseModel):
     """Metadata for scraped data elements."""
-
     selector: str = Field(
         ..., min_length=1, description="CSS selector used to find element"
     )
@@ -24,11 +19,8 @@ class ElementMetadata(BaseModel):
     xpath: Optional[str] = Field(
         default=None, description="XPath selector (if available)"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "selector": "h1.product-title",
@@ -43,22 +35,17 @@ class ElementMetadata(BaseModel):
                 },
             ]
         }
-
-
+    )
 class DataElement(BaseModel):
     """Individual scraped data element."""
-
     id: str = Field(..., min_length=1, description="Unique element identifier")
     type: Literal["text", "link", "image", "structured"] = Field(
         ..., description="Type of scraped element"
     )
     value: Any = Field(..., description="Scraped value (content depends on type)")
     metadata: ElementMetadata = Field(..., description="Element metadata")
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "id": "title-element-1",
@@ -122,3 +109,4 @@ class DataElement(BaseModel):
                 },
             ]
         }
+    )
