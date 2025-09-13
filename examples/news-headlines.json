@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "News Headlines Scraper",
+    "description": "Extract news headlines and links from a news website",
+    "author": "scrapper-examples",
+    "target_site": "https://example-news.com",
+    "tags": ["news", "headlines", "journalism"]
+  },
+  "scraping": {
+    "provider": "beautifulsoup",
+    "config": {
+      "parser": "lxml",
+      "timeout": 30000,
+      "headers": {
+        "User-Agent": "Mozilla/5.0 (compatible; scrapper/1.0.0)"
+      }
+    }
+  },
+  "storage": {
+    "provider": "csv",
+    "config": {
+      "file_path": "./news-headlines.csv",
+      "headers": true,
+      "delimiter": ",",
+      "append": false
+    }
+  },
+  "steps": [
+    {
+      "id": "init-news-site",
+      "command": "init",
+      "config": {
+        "url": "https://example-news.com",
+        "wait_for": "article"
+      },
+      "retries": 3,
+      "timeout": 30000,
+      "continue_on_error": false
+    },
+    {
+      "id": "extract-headlines",
+      "command": "extract",
+      "config": {
+        "elements": {
+          "headline": {
+            "selector": "h2.headline, h1.title",
+            "type": "text"
+          },
+          "url": {
+            "selector": "a",
+            "type": "attribute",
+            "attribute": "href"
+          },
+          "published_date": {
+            "selector": ".date, .publish-date",
+            "type": "text"
+          },
+          "summary": {
+            "selector": ".summary, .excerpt",
+            "type": "text"
+          },
+          "category": {
+            "selector": ".category, .tag",
+            "type": "text"
+          }
+        }
+      },
+      "retries": 3,
+      "timeout": 45000,
+      "continue_on_error": true
+    }
+  ],
+  "post_processing": [
+    {
+      "type": "filter",
+      "config": {
+        "min_length": 5,
+        "excludes": "advertisement"
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "strip": true,
+        "replace": {
+          "&amp;": "&",
+          "&quot;": "\"",
+          "&#39;": "'"
+        }
+      }
+    },
+    {
+      "type": "deduplicate",
+      "config": {
+        "key": "url"
+      }
+    }
+  ]
+}

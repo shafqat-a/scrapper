@@ -1,0 +1,162 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "Social Media Posts Scraper",
+    "description": "Extract posts and engagement metrics from social media platforms",
+    "author": "scrapper-examples",
+    "target_site": "https://example-social.com",
+    "tags": ["social-media", "posts", "engagement", "analytics"]
+  },
+  "scraping": {
+    "provider": "playwright",
+    "config": {
+      "browser": "chromium",
+      "headless": true,
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "timeout": 45000,
+      "javascript_enabled": true
+    }
+  },
+  "storage": {
+    "provider": "json",
+    "config": {
+      "file_path": "./social-posts.json",
+      "format": "json",
+      "pretty_print": true,
+      "append_mode": false
+    }
+  },
+  "steps": [
+    {
+      "id": "init-social-feed",
+      "command": "init",
+      "config": {
+        "url": "https://example-social.com/trending",
+        "wait_for": ".post-container",
+        "cookies": [
+          {
+            "name": "session_preference",
+            "value": "public_content",
+            "domain": "example-social.com",
+            "path": "/",
+            "http_only": false,
+            "secure": true
+          }
+        ]
+      },
+      "retries": 3,
+      "timeout": 45000,
+      "continue_on_error": false
+    },
+    {
+      "id": "extract-posts",
+      "command": "extract",
+      "config": {
+        "elements": {
+          "post_id": {
+            "selector": "[data-post-id]",
+            "type": "attribute",
+            "attribute": "data-post-id"
+          },
+          "author": {
+            "selector": ".author-name, .username",
+            "type": "text"
+          },
+          "content": {
+            "selector": ".post-content, .post-text",
+            "type": "text"
+          },
+          "timestamp": {
+            "selector": ".timestamp, .post-date",
+            "type": "text"
+          },
+          "likes": {
+            "selector": ".likes-count",
+            "type": "text",
+            "transform": "int"
+          },
+          "shares": {
+            "selector": ".shares-count",
+            "type": "text",
+            "transform": "int"
+          },
+          "comments": {
+            "selector": ".comments-count",
+            "type": "text",
+            "transform": "int"
+          },
+          "hashtags": {
+            "selector": ".hashtag",
+            "type": "text"
+          },
+          "media_url": {
+            "selector": ".media img, .media video",
+            "type": "attribute",
+            "attribute": "src"
+          },
+          "post_url": {
+            "selector": ".post-link",
+            "type": "attribute",
+            "attribute": "href"
+          }
+        }
+      },
+      "retries": 5,
+      "timeout": 30000,
+      "continue_on_error": true
+    },
+    {
+      "id": "scroll-for-more",
+      "command": "paginate",
+      "config": {
+        "next_page_selector": ".load-more-posts",
+        "max_pages": 5,
+        "wait_after_click": 4000,
+        "stop_condition": {
+          "selector": ".end-of-feed",
+          "text": "You've reached the end"
+        }
+      },
+      "retries": 2,
+      "timeout": 30000,
+      "continue_on_error": true
+    }
+  ],
+  "post_processing": [
+    {
+      "type": "filter",
+      "config": {
+        "min_length": 5,
+        "excludes": "promoted"
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "strip": true,
+        "replace": {
+          "&amp;": "&",
+          "&lt;": "<",
+          "&gt;": ">",
+          "\\n": " "
+        }
+      }
+    },
+    {
+      "type": "validate",
+      "config": {
+        "required": false,
+        "min_length": 1
+      }
+    },
+    {
+      "type": "deduplicate",
+      "config": {
+        "key": "post_id"
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Main scrapper application
+  scrapper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: web-scrapper-cli
+    volumes:
+      # Mount workflows and output directories
+      - ./workflows:/app/workflows:ro
+      - ./output:/app/data
+      - ./logs:/app/logs
+    environment:
+      # Python settings
+      - PYTHONPATH=/app/src
+      - SCRAPPER_LOG_LEVEL=INFO
+      # Database connections (when using PostgreSQL)
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=scrapper_data
+      - POSTGRES_USER=scrapper
+      - POSTGRES_PASSWORD=scrapper_pass
+      # MongoDB connection (when using MongoDB)
+      - MONGODB_URL=mongodb://mongodb:27017/scrapper_data
+    depends_on:
+      - postgres
+      - mongodb
+    networks:
+      - scrapper-network
+    restart: unless-stopped
+
+  # PostgreSQL database for storage provider
+  postgres:
+    image: postgres:15-alpine
+    container_name: scrapper-postgres
+    environment:
+      - POSTGRES_DB=scrapper_data
+      - POSTGRES_USER=scrapper
+      - POSTGRES_PASSWORD=scrapper_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize with sample schema
+      - ./docker/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - scrapper-network
+    restart: unless-stopped
+
+  # MongoDB for document storage
+  mongodb:
+    image: mongo:6
+    container_name: scrapper-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=scrapper_data
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - scrapper-network
+    restart: unless-stopped
+
+  # Redis for caching and job queues (future enhancement)
+  redis:
+    image: redis:7-alpine
+    container_name: scrapper-redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - scrapper-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  scrapper-network:
+    driver: bridge
+
+# Development override file usage:
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up

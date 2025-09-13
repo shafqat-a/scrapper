@@ -1,0 +1,167 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "E-commerce Product Scraper",
+    "description": "Scrape product listings with pagination support",
+    "author": "scrapper-examples",
+    "target_site": "https://example-shop.com",
+    "tags": ["ecommerce", "products", "pagination", "pricing"]
+  },
+  "scraping": {
+    "provider": "playwright",
+    "config": {
+      "browser": "chromium",
+      "headless": true,
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "timeout": 60000
+    }
+  },
+  "storage": {
+    "provider": "postgresql",
+    "config": {
+      "connection_string": "postgresql://username:password@localhost:5432/products_db",
+      "table_name": "scraped_products"
+    },
+    "data_schema": {
+      "name": "products",
+      "fields": {
+        "name": {
+          "type": "string",
+          "required": true,
+          "max_length": 255,
+          "index": true
+        },
+        "price": {
+          "type": "number",
+          "required": true,
+          "index": true
+        },
+        "rating": {
+          "type": "number",
+          "required": false
+        },
+        "availability": {
+          "type": "string",
+          "required": false,
+          "max_length": 50
+        },
+        "product_url": {
+          "type": "string",
+          "required": true,
+          "max_length": 500,
+          "index": true
+        }
+      },
+      "primary_key": ["product_url"]
+    }
+  },
+  "steps": [
+    {
+      "id": "init-product-page",
+      "command": "init",
+      "config": {
+        "url": "https://example-shop.com/products",
+        "wait_for": ".product-grid"
+      },
+      "retries": 3,
+      "timeout": 60000,
+      "continue_on_error": false
+    },
+    {
+      "id": "extract-products",
+      "command": "extract",
+      "config": {
+        "elements": {
+          "name": {
+            "selector": ".product-name, h3.title",
+            "type": "text"
+          },
+          "price": {
+            "selector": ".price, .product-price",
+            "type": "text",
+            "transform": "float"
+          },
+          "rating": {
+            "selector": ".rating, .stars",
+            "type": "text",
+            "transform": "float"
+          },
+          "availability": {
+            "selector": ".stock-status, .availability",
+            "type": "text"
+          },
+          "product_url": {
+            "selector": "a",
+            "type": "attribute",
+            "attribute": "href"
+          },
+          "image_url": {
+            "selector": "img",
+            "type": "attribute",
+            "attribute": "src"
+          },
+          "discount": {
+            "selector": ".discount, .sale",
+            "type": "text"
+          }
+        }
+      },
+      "retries": 5,
+      "timeout": 45000,
+      "continue_on_error": true
+    },
+    {
+      "id": "navigate-next-page",
+      "command": "paginate",
+      "config": {
+        "next_page_selector": ".next-page, a[aria-label='Next']",
+        "max_pages": 20,
+        "wait_after_click": 3000,
+        "stop_condition": {
+          "selector": ".no-more-products",
+          "text": "No more products"
+        }
+      },
+      "retries": 3,
+      "timeout": 30000,
+      "continue_on_error": true
+    }
+  ],
+  "post_processing": [
+    {
+      "type": "filter",
+      "config": {
+        "min_length": 3,
+        "contains": "price"
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "strip": true,
+        "replace": {
+          "$": "",
+          ",": "",
+          "USD": ""
+        }
+      }
+    },
+    {
+      "type": "validate",
+      "config": {
+        "required": true,
+        "min_length": 1,
+        "pattern": ".*\\d+.*"
+      }
+    },
+    {
+      "type": "deduplicate",
+      "config": {
+        "key": "product_url"
+      }
+    }
+  ]
+}

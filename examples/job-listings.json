@@ -1,0 +1,152 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "Job Listings Scraper",
+    "description": "Extract job postings from job board websites",
+    "author": "scrapper-examples",
+    "target_site": "https://example-jobs.com",
+    "tags": ["jobs", "careers", "employment", "hiring"]
+  },
+  "scraping": {
+    "provider": "scrapy",
+    "config": {
+      "concurrent_requests": 8,
+      "download_delay": 1.0,
+      "randomize_download_delay": true,
+      "user_agent": "Mozilla/5.0 (compatible; JobScrapper/1.0.0)",
+      "robotstxt_obey": true,
+      "retry_times": 3
+    }
+  },
+  "storage": {
+    "provider": "json",
+    "config": {
+      "file_path": "./job-listings.jsonl",
+      "format": "jsonl",
+      "pretty_print": false,
+      "append_mode": true
+    }
+  },
+  "steps": [
+    {
+      "id": "init-job-board",
+      "command": "init",
+      "config": {
+        "url": "https://example-jobs.com/search?q=python+developer",
+        "wait_for": 2000
+      },
+      "retries": 3,
+      "timeout": 30000,
+      "continue_on_error": false
+    },
+    {
+      "id": "discover-job-structure",
+      "command": "discover",
+      "config": {
+        "selectors": {
+          "job_card": ".job-listing, .job-card",
+          "title": "h2, h3, .job-title",
+          "company": ".company-name, .employer",
+          "location": ".location, .job-location",
+          "salary": ".salary, .compensation",
+          "description": ".job-summary, .description"
+        }
+      },
+      "retries": 2,
+      "timeout": 20000,
+      "continue_on_error": true
+    },
+    {
+      "id": "extract-job-details",
+      "command": "extract",
+      "config": {
+        "elements": {
+          "title": {
+            "selector": "h2.job-title, h3.title",
+            "type": "text"
+          },
+          "company": {
+            "selector": ".company-name, .employer",
+            "type": "text"
+          },
+          "location": {
+            "selector": ".location, .job-location",
+            "type": "text"
+          },
+          "salary": {
+            "selector": ".salary, .compensation",
+            "type": "text"
+          },
+          "job_type": {
+            "selector": ".job-type, .employment-type",
+            "type": "text"
+          },
+          "experience_level": {
+            "selector": ".experience, .level",
+            "type": "text"
+          },
+          "description": {
+            "selector": ".job-summary, .description",
+            "type": "text"
+          },
+          "posted_date": {
+            "selector": ".posted-date, .date",
+            "type": "text"
+          },
+          "job_url": {
+            "selector": "a",
+            "type": "attribute",
+            "attribute": "href"
+          },
+          "apply_url": {
+            "selector": ".apply-link",
+            "type": "attribute",
+            "attribute": "href"
+          }
+        }
+      },
+      "retries": 3,
+      "timeout": 30000,
+      "continue_on_error": true
+    },
+    {
+      "id": "load-more-jobs",
+      "command": "paginate",
+      "config": {
+        "next_page_selector": ".load-more, .next-page",
+        "max_pages": 10,
+        "wait_after_click": 2000
+      },
+      "retries": 2,
+      "timeout": 25000,
+      "continue_on_error": true
+    }
+  ],
+  "post_processing": [
+    {
+      "type": "filter",
+      "config": {
+        "min_length": 10,
+        "excludes": "sponsored"
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "strip": true,
+        "lowercase": false,
+        "replace": {
+          "\n": " ",
+          "\t": " ",
+          "  ": " "
+        }
+      }
+    },
+    {
+      "type": "deduplicate",
+      "config": {
+        "key": "job_url"
+      }
+    }
+  ]
+}
