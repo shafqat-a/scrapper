@@ -1,0 +1,210 @@
+# Docker Compose for Integration Test Backends
+# This file sets up real storage backends for integration testing
+# Run with: docker-compose -f docker-compose.test.yml up -d
+
+version: '3.8'
+
+services:
+  # PostgreSQL database for storage provider testing
+  postgres:
+    image: postgres:15-alpine
+    container_name: scrapper-test-postgres
+    environment:
+      POSTGRES_DB: test_scrapper
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./tests/fixtures/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_scrapper"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # MongoDB database for document storage testing
+  mongodb:
+    image: mongo:7-jammy
+    container_name: scrapper-test-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test_user
+      MONGO_INITDB_ROOT_PASSWORD: test_password
+      MONGO_INITDB_DATABASE: test_scrapper
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_test_data:/data/db
+      - ./tests/fixtures/mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # Redis for caching and session storage testing
+  redis:
+    image: redis:7-alpine
+    container_name: scrapper-test-redis
+    environment:
+      REDIS_PASSWORD: test_password
+    command: redis-server --requirepass test_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "test_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # Elasticsearch for search and analytics testing
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: scrapper-test-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_test_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # Local web server for scraping tests
+  test-web-server:
+    image: nginx:alpine
+    container_name: scrapper-test-webserver
+    ports:
+      - "8080:80"
+    volumes:
+      - ./tests/fixtures/html:/usr/share/nginx/html:ro
+      - ./tests/fixtures/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # MinIO S3-compatible storage for file storage testing
+  minio:
+    image: minio/minio:latest
+    container_name: scrapper-test-minio
+    environment:
+      MINIO_ROOT_USER: test_user
+      MINIO_ROOT_PASSWORD: test_password123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_test_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # RabbitMQ for message queue testing
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: scrapper-test-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: test_user
+      RABBITMQ_DEFAULT_PASS: test_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_test_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - test-network
+
+  # Test initialization service
+  test-init:
+    image: python:3.11-slim
+    container_name: scrapper-test-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./tests/fixtures/init:/app/init:ro
+    working_dir: /app/init
+    command: |
+      bash -c "
+        pip install psycopg2-binary pymongo redis elasticsearch boto3 &&
+        python init_test_data.py &&
+        echo 'Test backends initialized successfully'
+      "
+    networks:
+      - test-network
+
+# Named volumes for persistent test data
+volumes:
+  postgres_test_data:
+    name: scrapper_postgres_test
+  mongodb_test_data:
+    name: scrapper_mongodb_test
+  redis_test_data:
+    name: scrapper_redis_test
+  elasticsearch_test_data:
+    name: scrapper_elasticsearch_test
+  minio_test_data:
+    name: scrapper_minio_test
+  rabbitmq_test_data:
+    name: scrapper_rabbitmq_test
+
+# Isolated network for test services
+networks:
+  test-network:
+    name: scrapper-test-network
+    driver: bridge

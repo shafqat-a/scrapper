@@ -122,15 +122,53 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --strict-markers --cov=src --cov-report=term-missing"
+addopts = [
+    "-ra",
+    "-q",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+    "--tb=short",
+]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+console_output_style = "progress"
+junit_family = "xunit2"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "contract: marks tests as contract tests for providers",
     "e2e: marks tests as end-to-end tests",
+    "unit: marks tests as unit tests",
+    "playwright: marks tests that require Playwright browser automation",
+    "scrapy: marks tests that require Scrapy framework",
+    "database: marks tests that require database connections",
+    "network: marks tests that require network access",
+    "docker: marks tests that require Docker containers",
 ]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore:.*urllib3.*:DeprecationWarning",
+    "ignore:.*scrapy.*:DeprecationWarning",
+    "ignore:.*twisted.*:DeprecationWarning",
+    "error",
+]
+timeout = 300
+timeout_method = "thread"
 
 [tool.coverage.run]
 source = ["src"]
