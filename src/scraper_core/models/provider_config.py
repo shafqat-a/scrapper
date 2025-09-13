@@ -7,7 +7,7 @@ These models define the structure for configuring different scraping and storage
 from typing import Literal, Optional
 
 # Third-party imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # Local folder imports
 # Local imports - Viewport is already defined in page_context.py
@@ -21,8 +21,6 @@ class ConnectionConfig(BaseModel):
 
 
 # Scraping Provider Configurations
-
-
 class ScrapyConfig(ConnectionConfig):
     """Configuration for Scrapy scraping provider."""
 
@@ -39,11 +37,8 @@ class ScrapyConfig(ConnectionConfig):
         default=None, description="User agent string to use"
     )
     robotstxt_obey: bool = Field(default=True, description="Whether to obey robots.txt")
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "concurrent_requests": 16,
                 "download_delay": 1.0,
@@ -52,6 +47,7 @@ class ScrapyConfig(ConnectionConfig):
                 "robotstxt_obey": True,
             }
         }
+    )
 
 
 class PlaywrightConfig(ConnectionConfig):
@@ -71,11 +67,8 @@ class PlaywrightConfig(ConnectionConfig):
     timeout: int = Field(
         default=30000, gt=0, description="Default timeout in milliseconds"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "browser": "firefox",
                 "headless": False,
@@ -84,6 +77,7 @@ class PlaywrightConfig(ConnectionConfig):
                 "timeout": 60000,
             }
         }
+    )
 
 
 class BeautifulSoupConfig(ConnectionConfig):
@@ -101,11 +95,8 @@ class BeautifulSoupConfig(ConnectionConfig):
     follow_redirects: bool = Field(
         default=True, description="Whether to follow HTTP redirects"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "parser": "html.parser",
                 "timeout": 5000,
@@ -113,11 +104,10 @@ class BeautifulSoupConfig(ConnectionConfig):
                 "follow_redirects": False,
             }
         }
+    )
 
 
 # Storage Provider Configurations
-
-
 class CSVStorageConfig(ConnectionConfig):
     """Configuration for CSV file storage provider."""
 
@@ -127,11 +117,8 @@ class CSVStorageConfig(ConnectionConfig):
     append: bool = Field(
         default=False, description="Whether to append to existing file"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "file_path": "/tmp/scraped_data.csv",
                 "delimiter": ";",
@@ -139,6 +126,7 @@ class CSVStorageConfig(ConnectionConfig):
                 "append": True,
             }
         }
+    )
 
 
 class PostgreSQLStorageConfig(ConnectionConfig):
@@ -154,11 +142,8 @@ class PostgreSQLStorageConfig(ConnectionConfig):
     batch_size: int = Field(
         default=1000, ge=1, description="Batch size for bulk inserts"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "connection_string": "postgresql://user:pass@localhost:5432/mydb",
                 "table_name": "scraped_products",
@@ -166,6 +151,7 @@ class PostgreSQLStorageConfig(ConnectionConfig):
                 "batch_size": 500,
             }
         }
+    )
 
 
 class MongoDBStorageConfig(ConnectionConfig):
@@ -179,11 +165,8 @@ class MongoDBStorageConfig(ConnectionConfig):
     upsert: bool = Field(
         default=False, description="Whether to use upsert for duplicates"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "connection_string": "mongodb://user:pass@localhost:27017/mydb",
                 "database": "scraping_db",
@@ -191,6 +174,7 @@ class MongoDBStorageConfig(ConnectionConfig):
                 "upsert": True,
             }
         }
+    )
 
 
 class SQLiteStorageConfig(ConnectionConfig):
@@ -203,14 +187,12 @@ class SQLiteStorageConfig(ConnectionConfig):
     create_table: bool = Field(
         default=True, description="Whether to create table if not exists"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "database_path": "/tmp/scraping.db",
                 "table_name": "scraped_data",
                 "create_table": False,
             }
         }
+    )

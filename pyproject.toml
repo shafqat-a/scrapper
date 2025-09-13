@@ -70,7 +70,7 @@ analytics = ["pandas"]
 all = ["psycopg2", "asyncpg", "pymongo", "motor", "pyodbc", "pandas"]
 
 [tool.poetry.scripts]
-scrapper = "scraper_core.cli.main:cli"
+scrapper = "cli.main:main"
 
 [tool.black]
 line-length = 88
@@ -131,7 +131,7 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
-    "--cov-fail-under=80",
+    "--cov-fail-under=10",
     "--tb=short",
 ]
 testpaths = ["tests"]

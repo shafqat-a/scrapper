@@ -2,22 +2,16 @@
 Storage and data persistence models for the web scraper system.
 These models define the structure for storing scraped data and managing schemas.
 """
-
 # Standard library imports
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-
 # Third-party imports
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, ConfigDict
 # Local folder imports
 # Local imports - SchemaDefinition and SchemaField are in workflow.py
 from .workflow import SchemaDefinition, SchemaField
-
-
 class ScrapedItem(BaseModel):
     """Individual scraped data item for storage."""
-
     id: str = Field(..., min_length=1, description="Unique item identifier")
     source_url: str = Field(..., min_length=1, description="URL where item was scraped")
     scraped_at: datetime = Field(
@@ -27,10 +21,8 @@ class ScrapedItem(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(
         default_factory=dict, description="Additional metadata"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
+    model_config = ConfigDict(
+        
         json_schema_extra = {
             "examples": [
                 {
@@ -50,11 +42,8 @@ class ScrapedItem(BaseModel):
                 }
             ]
         }
-
-
 class BatchInsertResult(BaseModel):
     """Result of a batch insert operation."""
-
     success: bool = Field(..., description="Whether the batch insert was successful")
     inserted_count: int = Field(
         ..., ge=0, description="Number of items successfully inserted"
@@ -68,10 +57,8 @@ class BatchInsertResult(BaseModel):
     duration_ms: int = Field(
         ..., ge=0, description="Operation duration in milliseconds"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
+    model_config = ConfigDict(
+        
         json_schema_extra = {
             "examples": [
                 {
@@ -93,11 +80,8 @@ class BatchInsertResult(BaseModel):
                 },
             ]
         }
-
-
 class StorageStats(BaseModel):
     """Storage provider statistics and metrics."""
-
     total_items: int = Field(..., ge=0, description="Total number of items stored")
     total_size_bytes: int = Field(..., ge=0, description="Total storage size in bytes")
     last_updated: datetime = Field(..., description="Timestamp of last update")
@@ -105,10 +89,8 @@ class StorageStats(BaseModel):
     connection_info: Dict[str, Any] = Field(
         default_factory=dict, description="Connection information (no secrets)"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
+    model_config = ConfigDict(
+        
         json_schema_extra = {
             "examples": [
                 {
@@ -135,11 +117,8 @@ class StorageStats(BaseModel):
                 },
             ]
         }
-
-
 class StorageHealthCheck(BaseModel):
     """Storage provider health check result."""
-
     healthy: bool = Field(..., description="Whether the storage provider is healthy")
     response_time_ms: int = Field(
         ..., ge=0, description="Response time in milliseconds"
@@ -154,10 +133,8 @@ class StorageHealthCheck(BaseModel):
     errors: List[str] = Field(
         default_factory=list, description="List of any error messages"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
+    model_config = ConfigDict(
+        
         json_schema_extra = {
             "examples": [
                 {

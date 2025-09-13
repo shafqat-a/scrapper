@@ -7,7 +7,7 @@ These models define the structure for individual workflow steps and their config
 from typing import Any, Dict, List, Literal, Optional, Union
 
 # Third-party imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Cookie(BaseModel):
@@ -94,11 +94,8 @@ class WorkflowStep(BaseModel):
     continue_on_error: bool = Field(
         default=False, description="Whether to continue workflow on step failure"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "id": "init-step",
@@ -130,3 +127,4 @@ class WorkflowStep(BaseModel):
                 },
             ]
         }
+    )

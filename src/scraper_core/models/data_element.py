@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 
 # Third-party imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ElementMetadata(BaseModel):
@@ -24,11 +24,8 @@ class ElementMetadata(BaseModel):
     xpath: Optional[str] = Field(
         default=None, description="XPath selector (if available)"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "selector": "h1.product-title",
@@ -43,6 +40,7 @@ class ElementMetadata(BaseModel):
                 },
             ]
         }
+    )
 
 
 class DataElement(BaseModel):
@@ -54,11 +52,8 @@ class DataElement(BaseModel):
     )
     value: Any = Field(..., description="Scraped value (content depends on type)")
     metadata: ElementMetadata = Field(..., description="Element metadata")
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "id": "title-element-1",
@@ -122,3 +117,4 @@ class DataElement(BaseModel):
                 },
             ]
         }
+    )

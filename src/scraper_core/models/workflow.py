@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 
 # Third-party imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     # Local folder imports
@@ -77,8 +77,6 @@ class StorageConfig(BaseModel):
 
 
 # WorkflowStep is now imported from .workflow_step
-
-
 class PostProcessingStep(BaseModel):
     """Post-processing step for data transformation."""
 
@@ -105,11 +103,8 @@ class Workflow(BaseModel):
     post_processing: Optional[List[PostProcessingStep]] = Field(
         default=None, description="Optional post-processing steps"
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "version": "1.0.0",
                 "metadata": {
@@ -148,3 +143,4 @@ class Workflow(BaseModel):
                 ],
             }
         }
+    )
