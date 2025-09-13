@@ -3,6 +3,7 @@ Data Models - Pydantic models for the web scraping system.
 This module contains all Pydantic models used throughout the system
 for data validation, serialization, and type safety.
 """
+
 # Local folder imports
 from .data_element import DataElement, ElementMetadata
 from .page_context import PageContext, Viewport
@@ -34,6 +35,7 @@ from .workflow_step import (
     PaginateStepConfig,
     WorkflowStep,
 )
+
 __all__ = [
     "BatchInsertResult",
     "BeautifulSoupConfig",
