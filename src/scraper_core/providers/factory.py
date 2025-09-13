@@ -6,9 +6,10 @@ This module provides dynamic provider loading and management.
 # Standard library imports
 from typing import Dict, List, Optional, Type, Union
 
+# Local folder imports
 # Local imports
-from ...providers.scrapers.base import ScrapingProvider, ProviderMetadata
-from ...providers.storage.base import StorageProvider, ConnectionConfig
+from ...providers.scrapers.base import ProviderMetadata, ScrapingProvider
+from ...providers.storage.base import ConnectionConfig, StorageProvider
 
 
 class ProviderRegistry:
@@ -18,11 +19,15 @@ class ProviderRegistry:
         self._scraping_providers: Dict[str, Type[ScrapingProvider]] = {}
         self._storage_providers: Dict[str, Type[StorageProvider]] = {}
 
-    def register_scraping_provider(self, name: str, provider_class: Type[ScrapingProvider]) -> None:
+    def register_scraping_provider(
+        self, name: str, provider_class: Type[ScrapingProvider]
+    ) -> None:
         """Register a scraping provider."""
         self._scraping_providers[name] = provider_class
 
-    def register_storage_provider(self, name: str, provider_class: Type[StorageProvider]) -> None:
+    def register_storage_provider(
+        self, name: str, provider_class: Type[StorageProvider]
+    ) -> None:
         """Register a storage provider."""
         self._storage_providers[name] = provider_class
 
@@ -59,7 +64,12 @@ class ProviderRegistry:
             except Exception:
                 # If instantiation fails, create minimal metadata
                 providers.append(
-                    ProviderMetadata(name=name, version="unknown", provider_type="scraping", capabilities=[])
+                    ProviderMetadata(
+                        name=name,
+                        version="unknown",
+                        provider_type="scraping",
+                        capabilities=[],
+                    )
                 )
 
         # Add storage providers
@@ -69,7 +79,12 @@ class ProviderRegistry:
                 providers.append(instance.metadata)
             except Exception:
                 providers.append(
-                    ProviderMetadata(name=name, version="unknown", provider_type="storage", capabilities=[])
+                    ProviderMetadata(
+                        name=name,
+                        version="unknown",
+                        provider_type="storage",
+                        capabilities=[],
+                    )
                 )
 
         return providers
@@ -109,13 +124,15 @@ class ProviderFactory:
 
         return [p for p in all_providers if p.type == type_filter]
 
-    def register_provider(self, provider: Union[ScrapingProvider, StorageProvider]) -> None:
+    def register_provider(
+        self, provider: Union[ScrapingProvider, StorageProvider]
+    ) -> None:
         """Register a new provider instance."""
-        if hasattr(provider, 'execute_init'):  # Duck typing for scraping provider
+        if hasattr(provider, "execute_init"):  # Duck typing for scraping provider
             self.registry.register_scraping_provider(
                 provider.metadata.name, type(provider)
             )
-        elif hasattr(provider, 'connect'):  # Duck typing for storage provider
+        elif hasattr(provider, "connect"):  # Duck typing for storage provider
             self.registry.register_storage_provider(
                 provider.metadata.name, type(provider)
             )
@@ -152,7 +169,9 @@ def get_provider_factory() -> ProviderFactory:
     return _global_factory
 
 
-def register_scraping_provider(name: str, provider_class: Type[ScrapingProvider]) -> None:
+def register_scraping_provider(
+    name: str, provider_class: Type[ScrapingProvider]
+) -> None:
     """Convenience function to register a scraping provider globally."""
     factory = get_provider_factory()
     factory.registry.register_scraping_provider(name, provider_class)

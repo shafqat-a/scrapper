@@ -2,19 +2,28 @@
 Provider configuration models for the web scraper system.
 These models define the structure for configuring different scraping and storage providers.
 """
+
 # Standard library imports
 from typing import Literal, Optional
+
 # Third-party imports
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 # Local folder imports
 # Local imports - Viewport is already defined in page_context.py
 from .page_context import Viewport
+
+
 class ConnectionConfig(BaseModel):
     """Base configuration for provider connections."""
+
     pass
+
+
 # Scraping Provider Configurations
 class ScrapyConfig(ConnectionConfig):
     """Configuration for Scrapy scraping provider."""
+
     concurrent_requests: int = Field(
         default=8, ge=1, le=100, description="Number of concurrent requests"
     )
@@ -37,10 +46,13 @@ class ScrapyConfig(ConnectionConfig):
                 "user_agent": "MyBot/1.0",
                 "robotstxt_obey": True,
             }
+        }
     )
-    )
+
+
 class PlaywrightConfig(ConnectionConfig):
     """Configuration for Playwright browser automation provider."""
+
     browser: Literal["chromium", "firefox", "webkit"] = Field(
         default="chromium", description="Browser engine to use"
     )
@@ -64,10 +76,13 @@ class PlaywrightConfig(ConnectionConfig):
                 "user_agent": "Mozilla/5.0 (compatible; PlaywrightBot/1.0)",
                 "timeout": 60000,
             }
-    )
         }
+    )
+
+
 class BeautifulSoupConfig(ConnectionConfig):
     """Configuration for BeautifulSoup HTML parsing provider."""
+
     parser: Literal["html.parser", "lxml", "html5lib"] = Field(
         default="lxml", description="HTML parser to use"
     )
@@ -88,11 +103,14 @@ class BeautifulSoupConfig(ConnectionConfig):
                 "user_agent": "Custom Parser/1.0",
                 "follow_redirects": False,
             }
-    )
         }
+    )
+
+
 # Storage Provider Configurations
 class CSVStorageConfig(ConnectionConfig):
     """Configuration for CSV file storage provider."""
+
     file_path: str = Field(..., min_length=1, description="Path to the CSV file")
     delimiter: str = Field(default=",", description="CSV field delimiter")
     headers: bool = Field(default=True, description="Whether to include column headers")
@@ -107,10 +125,13 @@ class CSVStorageConfig(ConnectionConfig):
                 "headers": False,
                 "append": True,
             }
-    )
         }
+    )
+
+
 class PostgreSQLStorageConfig(ConnectionConfig):
     """Configuration for PostgreSQL database storage provider."""
+
     connection_string: str = Field(
         ..., min_length=1, description="PostgreSQL connection string"
     )
@@ -129,10 +150,13 @@ class PostgreSQLStorageConfig(ConnectionConfig):
                 "create_table": False,
                 "batch_size": 500,
             }
-    )
         }
+    )
+
+
 class MongoDBStorageConfig(ConnectionConfig):
     """Configuration for MongoDB storage provider."""
+
     connection_string: str = Field(
         ..., min_length=1, description="MongoDB connection string"
     )
@@ -149,10 +173,13 @@ class MongoDBStorageConfig(ConnectionConfig):
                 "collection": "products",
                 "upsert": True,
             }
-    )
         }
+    )
+
+
 class SQLiteStorageConfig(ConnectionConfig):
     """Configuration for SQLite database storage provider."""
+
     database_path: str = Field(
         ..., min_length=1, description="Path to SQLite database file"
     )
@@ -167,5 +194,5 @@ class SQLiteStorageConfig(ConnectionConfig):
                 "table_name": "scraped_data",
                 "create_table": False,
             }
-    )
         }
+    )

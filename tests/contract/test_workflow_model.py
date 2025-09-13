@@ -68,7 +68,7 @@ except ImportError:
     class StorageConfig(BaseModel):
         provider: str
         config: Dict[str, Any]
-        schema: Optional[SchemaDefinition] = None
+        data_schema: Optional[SchemaDefinition] = None
 
     class WorkflowStep(BaseModel):
         id: str = Field(..., pattern=r"^[a-zA-Z0-9_-]+$")

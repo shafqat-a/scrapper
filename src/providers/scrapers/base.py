@@ -7,22 +7,25 @@ This module defines the interface and abstract base class for all scraping provi
 from abc import ABC, abstractmethod
 from typing import List, Optional, Protocol
 
+# Local folder imports
 # Local imports
 from ...scraper_core.models import (
+    ConnectionConfig,
     DataElement,
-    PageContext,
-    InitStepConfig,
     DiscoverStepConfig,
     ExtractStepConfig,
+    InitStepConfig,
+    PageContext,
     PaginateStepConfig,
-    ConnectionConfig,
 )
 
 
 class ProviderMetadata:
     """Metadata for provider instances."""
 
-    def __init__(self, name: str, version: str, provider_type: str, capabilities: List[str]):
+    def __init__(
+        self, name: str, version: str, provider_type: str, capabilities: List[str]
+    ):
         self.name = name
         self.version = version
         self.type = provider_type
@@ -77,7 +80,7 @@ class BaseScraper(ABC):
             name="base-scraper",
             version="1.0.0",
             provider_type="scraping",
-            capabilities=[]
+            capabilities=[],
         )
 
     @abstractmethod

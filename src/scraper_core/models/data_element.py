@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 
 # Third-party imports
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ElementMetadata(BaseModel):

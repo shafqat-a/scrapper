@@ -70,7 +70,7 @@ analytics = ["pandas"]
 all = ["psycopg2", "asyncpg", "pymongo", "motor", "pyodbc", "pandas"]
 
 [tool.poetry.scripts]
-scrapper = "scraper_core.cli.main:cli"
+scrapper = "cli.main:main"
 
 [tool.black]
 line-length = 88

@@ -7,7 +7,7 @@ These models define the structure for browser context and viewport information.
 from typing import List
 
 # Third-party imports
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # Local folder imports
 # Local imports - Cookie is already defined in workflow_step.py

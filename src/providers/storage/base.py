@@ -8,12 +8,9 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, List, Optional, Protocol
 
+# Local folder imports
 # Local imports
-from ...scraper_core.models import (
-    DataElement,
-    SchemaDefinition,
-    ConnectionConfig,
-)
+from ...scraper_core.models import ConnectionConfig, DataElement, SchemaDefinition
 
 
 class QueryCriteria:
@@ -35,7 +32,12 @@ class QueryCriteria:
 class StorageStats:
     """Storage statistics and metrics."""
 
-    def __init__(self, total_records: int, last_updated: datetime, storage_size: Optional[int] = None):
+    def __init__(
+        self,
+        total_records: int,
+        last_updated: datetime,
+        storage_size: Optional[int] = None,
+    ):
         self.total_records = total_records
         self.last_updated = last_updated
         self.storage_size = storage_size
@@ -44,7 +46,9 @@ class StorageStats:
 class ProviderMetadata:
     """Metadata for provider instances."""
 
-    def __init__(self, name: str, version: str, provider_type: str, capabilities: List[str]):
+    def __init__(
+        self, name: str, version: str, provider_type: str, capabilities: List[str]
+    ):
         self.name = name
         self.version = version
         self.type = provider_type
@@ -107,7 +111,7 @@ class BaseStorage(ABC):
             name="base-storage",
             version="1.0.0",
             provider_type="storage",
-            capabilities=[]
+            capabilities=[],
         )
 
     @abstractmethod

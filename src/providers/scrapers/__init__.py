@@ -5,7 +5,8 @@ This module contains all scraping provider implementations including
 Scrapy, Playwright, and BeautifulSoup providers.
 """
 
-from .base import BaseScraper, ScrapingProvider, ProviderMetadata
+# Local folder imports
+from .base import BaseScraper, ProviderMetadata, ScrapingProvider
 
 __all__ = [
     "BaseScraper",
