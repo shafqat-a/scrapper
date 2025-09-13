@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Website - Web Scrapper Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .product { border: 1px solid #ccc; margin: 10px; padding: 15px; }
+        .price { color: green; font-weight: bold; }
+        .pagination { margin: 20px 0; }
+        .pagination a { margin: 0 5px; padding: 5px 10px; border: 1px solid #ddd; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Test E-commerce Site</h1>
+    <p>This is a test website for web scraping integration tests.</p>
+
+    <div class="products">
+        <div class="product" data-id="1">
+            <h3 class="title">Test Product 1</h3>
+            <p class="description">A sample product for testing scraping functionality.</p>
+            <span class="price">$19.99</span>
+            <span class="stock">In Stock</span>
+        </div>
+
+        <div class="product" data-id="2">
+            <h3 class="title">Test Product 2</h3>
+            <p class="description">Another sample product with different data.</p>
+            <span class="price">$29.99</span>
+            <span class="stock">Out of Stock</span>
+        </div>
+
+        <div class="product" data-id="3">
+            <h3 class="title">Test Product 3</h3>
+            <p class="description">Third product for comprehensive testing.</p>
+            <span class="price">$39.99</span>
+            <span class="stock">Limited Stock</span>
+        </div>
+    </div>
+
+    <div class="pagination">
+        <a href="page1.html">1</a>
+        <a href="page2.html">2</a>
+        <a href="page3.html">Next</a>
+    </div>
+
+    <script>
+        // Simple JavaScript for dynamic content testing
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Test page loaded');
+
+            // Add dynamic content after page load
+            setTimeout(function() {
+                const dynamicDiv = document.createElement('div');
+                dynamicDiv.id = 'dynamic-content';
+                dynamicDiv.innerHTML = '<p>This content was loaded dynamically</p>';
+                document.body.appendChild(dynamicDiv);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
