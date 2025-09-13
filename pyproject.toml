@@ -159,13 +159,13 @@ markers = [
     "docker: marks tests that require Docker containers",
 ]
 filterwarnings = [
-    "error",
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
     "ignore:.*urllib3.*:DeprecationWarning",
     "ignore:.*scrapy.*:DeprecationWarning",
     "ignore:.*twisted.*:DeprecationWarning",
+    "error",
 ]
 timeout = 300
 timeout_method = "thread"
