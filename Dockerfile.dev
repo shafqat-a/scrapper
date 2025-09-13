@@ -1,0 +1,72 @@
+# Development Dockerfile with hot reloading and debugging tools
+FROM python:3.11-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    ca-certificates \
+    curl \
+    wget \
+    libpq-dev \
+    git \
+    # Playwright dependencies
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libxcomposite1 \
+    libxrandr2 \
+    libxdamage1 \
+    libxss1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Development stage
+FROM base as development
+
+# Install Poetry
+RUN pip install poetry==1.6.1
+
+# Configure Poetry for development
+RUN poetry config virtualenvs.create true \
+    && poetry config virtualenvs.in-project true
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+
+# Install all dependencies including dev dependencies
+RUN poetry install --with dev --no-interaction --no-ansi
+
+# Install Playwright browsers
+RUN poetry run playwright install chromium --with-deps
+
+# Install additional development tools
+RUN pip install \
+    ipython \
+    jupyter \
+    debugpy \
+    watchdog[watchmedo]
+
+# Copy application code
+COPY . .
+
+# Install in editable mode
+RUN poetry run pip install -e .
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Default command for development
+CMD ["poetry", "run", "python", "-c", "print('Development container ready!')"]

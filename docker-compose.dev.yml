@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  scrapper:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    volumes:
+      # Mount source code for development
+      - .:/app
+      - /app/.venv  # Exclude virtual environment from host
+    environment:
+      # Development settings
+      - SCRAPPER_LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app/src
+      # Enable hot reloading and development features
+      - FLASK_ENV=development
+      - PYTEST_CURRENT_TEST=1
+    command: ["tail", "-f", "/dev/null"]  # Keep container running for development
+    stdin_open: true
+    tty: true
+
+  # Development database with exposed ports for direct access
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=scrapper_dev
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=dev_pass
+
+  mongodb:
+    ports:
+      - "27017:27017"
+
+  # Add development tools container
+  dev-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: scrapper-dev-tools
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/src
+    networks:
+      - scrapper-network
+    command: ["tail", "-f", "/dev/null"]  # Keep running for exec commands
+    profiles:
+      - dev-tools

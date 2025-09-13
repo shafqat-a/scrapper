@@ -4,25 +4,61 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "web-scrapper-cli"
-version = "0.1.0"
-description = "Provider-based web scraping system with pluggable scraping and storage providers"
-authors = ["Developer <developer@example.com>"]
+version = "1.0.0"
+description = "Production-ready web scraping framework with pluggable providers and beautiful CLI interface"
+authors = ["Scrapper Team <team@scrapper.dev>"]
+maintainers = ["Scrapper Team <team@scrapper.dev>"]
 readme = "README.md"
 license = "MIT"
+homepage = "https://github.com/shafqat-a/scrapper"
 repository = "https://github.com/shafqat-a/scrapper"
-keywords = ["web-scraping", "scrapy", "playwright", "beautifulsoup", "data-extraction"]
+documentation = "https://github.com/shafqat-a/scrapper/tree/main/docs"
+keywords = [
+    "web-scraping",
+    "scrapy",
+    "playwright",
+    "beautifulsoup",
+    "data-extraction",
+    "automation",
+    "cli",
+    "async",
+    "python"
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Archiving",
+    "Topic :: Utilities",
+    "Typing :: Typed"
+]
+packages = [
+    { include = "scraper_core", from = "src" },
+    { include = "providers", from = "src" },
+    { include = "cli", from = "src" }
+]
+include = [
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "examples/*.json",
+    "examples/README.md"
+]
+exclude = [
+    "tests/*",
+    "docs/*",
+    "*.pyc",
+    "__pycache__",
+    ".git/*"
 ]
 
 [tool.poetry.dependencies]
