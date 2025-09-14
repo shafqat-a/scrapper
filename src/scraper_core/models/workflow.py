@@ -80,7 +80,7 @@ class StorageConfig(BaseModel):
 class PostProcessingStep(BaseModel):
     """Post-processing step for data transformation."""
 
-    type: Literal["filter", "transform", "validate", "deduplicate"] = Field(
+    type: Literal["filter", "transform", "validate", "deduplicate", "remove_headers", "add_columns"] = Field(
         ..., description="Type of post-processing operation"
     )
     config: Dict[str, Any] = Field(

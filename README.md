@@ -157,6 +157,52 @@ scrapper providers test postgresql --config config.json
 }
 ```
 
+### BPDB Archive PDF Extraction
+
+```json
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "BPDB Archive Extraction",
+    "description": "Extract power generation data from BPDB daily PDFs",
+    "author": "scrapper-framework",
+    "target_site": "https://misc.bpdb.gov.bd/daily-generation-archive"
+  },
+  "scraping": {
+    "provider": "bpdb-archive",
+    "config": {
+      "timeout": 30000,
+      "retry_attempts": 3,
+      "pdf_storage": "bpdb_pdfs/"
+    }
+  },
+  "storage": {
+    "provider": "json",
+    "config": {
+      "output_file": "bpdb_data.json",
+      "pretty_format": true
+    }
+  },
+  "steps": [
+    {
+      "id": "init",
+      "command": "init",
+      "config": {
+        "from_date": "01/09/2025",
+        "to_date": "10/09/2025"
+      }
+    },
+    {
+      "id": "extract-tables",
+      "command": "extract",
+      "config": {
+        "elements": {}
+      }
+    }
+  ]
+}
+```
+
 ## 🔌 Available Providers
 
 ### Scraping Providers
@@ -166,6 +212,7 @@ scrapper providers test postgresql --config config.json
 | **BeautifulSoup** | Simple HTML parsing | ❌ | ⚡⚡⚡ |
 | **Scrapy** | Large-scale scraping | ❌ | ⚡⚡ |
 | **Playwright** | Modern web apps | ✅ | ⚡ |
+| **BPDB Archive** | PDF table extraction | ❌ | ⚡⚡ |
 
 ### Storage Providers
 

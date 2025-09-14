@@ -22,8 +22,7 @@ class ScrapedItem(BaseModel):
         default_factory=dict, description="Additional metadata"
     )
     model_config = ConfigDict(
-        
-        json_schema_extra = {
+        json_schema_extra={
             "examples": [
                 {
                     "id": "product_123",
@@ -42,6 +41,9 @@ class ScrapedItem(BaseModel):
                 }
             ]
         }
+    )
+
+
 class BatchInsertResult(BaseModel):
     """Result of a batch insert operation."""
     success: bool = Field(..., description="Whether the batch insert was successful")
@@ -80,6 +82,9 @@ class BatchInsertResult(BaseModel):
                 },
             ]
         }
+    )
+
+
 class StorageStats(BaseModel):
     """Storage provider statistics and metrics."""
     total_items: int = Field(..., ge=0, description="Total number of items stored")
@@ -117,6 +122,9 @@ class StorageStats(BaseModel):
                 },
             ]
         }
+    )
+
+
 class StorageHealthCheck(BaseModel):
     """Storage provider health check result."""
     healthy: bool = Field(..., description="Whether the storage provider is healthy")
@@ -158,3 +166,4 @@ class StorageHealthCheck(BaseModel):
                 },
             ]
         }
+    )

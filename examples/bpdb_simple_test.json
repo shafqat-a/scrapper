@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "BPDB Archive Test",
+    "description": "Simple test of BPDB archive extraction for 2 days",
+    "author": "Claude Code Scraper",
+    "version": "1.0.0",
+    "target_site": "https://misc.bpdb.gov.bd/daily-generation-archive"
+  },
+  "scraping": {
+    "provider": "bpdb-archive",
+    "config": {
+      "timeout": 30000,
+      "retry_attempts": 2
+    }
+  },
+  "storage": {
+    "provider": "json",
+    "config": {
+      "output_file": "bpdb_test_output.json",
+      "pretty_format": true
+    }
+  },
+  "steps": [
+    {
+      "id": "init",
+      "command": "init",
+      "config": {
+        "from_date": "13/09/2025",
+        "to_date": "14/09/2025"
+      }
+    },
+    {
+      "id": "extract",
+      "command": "extract",
+      "config": {
+        "elements": {}
+      }
+    }
+  ]
+}

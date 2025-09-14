@@ -18,6 +18,7 @@ from ..models.workflow_step import WorkflowStep
 from ..providers.factory import ProviderFactory, get_provider_factory
 from ..providers.scrapers.base import ScrapingProvider
 from ..providers.storage.base import StorageProvider
+from ..post_processing import create_post_processor
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -416,145 +417,23 @@ class WorkflowEngine:
             step_type = step.type
             config = step.config
 
-            if step_type == "filter":
-                processed_data = self._apply_filter(processed_data, config)
-            elif step_type == "transform":
-                processed_data = self._apply_transform(processed_data, config)
-            elif step_type == "validate":
-                processed_data = self._apply_validation(processed_data, config)
-            elif step_type == "deduplicate":
-                processed_data = self._apply_deduplication(processed_data, config)
-            else:
-                self.logger.warning(f"Unknown post-processing step type: {step_type}")
+            try:
+                # Use the new processor system
+                processor = create_post_processor(step_type, config)
+                initial_count = len(processed_data)
+                processed_data = processor.process(processed_data)
+                final_count = len(processed_data)
+
+                self.logger.info(
+                    f"Applied {step_type} post-processing: {initial_count} -> {final_count} items"
+                )
+
+            except ValueError as e:
+                self.logger.warning(f"Unknown post-processing step type '{step_type}': {e}")
+                continue
+            except Exception as e:
+                self.logger.error(f"Error in {step_type} post-processing: {e}")
+                continue
 
         return processed_data
 
-    def _apply_filter(
-        self, data: List[DataElement], config: Dict[str, Any]
-    ) -> List[DataElement]:
-        """Apply filtering to data elements."""
-        # Simple filtering implementation
-        filtered_data = []
-
-        for element in data:
-            include = True
-
-            # Apply filters based on config
-            for field, criteria in config.items():
-                if field == "min_length" and len(str(element.value)) < criteria:
-                    include = False
-                    break
-                elif field == "max_length" and len(str(element.value)) > criteria:
-                    include = False
-                    break
-                elif field == "contains" and criteria not in str(element.value):
-                    include = False
-                    break
-                elif field == "excludes" and criteria in str(element.value):
-                    include = False
-                    break
-
-            if include:
-                filtered_data.append(element)
-
-        return filtered_data
-
-    def _apply_transform(
-        self, data: List[DataElement], config: Dict[str, Any]
-    ) -> List[DataElement]:
-        """Apply transformations to data elements."""
-        transformed_data = []
-
-        for element in data:
-            # Create a copy to avoid modifying original
-            transformed_element = DataElement(
-                type=element.type,
-                selector=element.selector,
-                value=element.value,
-                attributes=element.attributes.copy(),
-                metadata=element.metadata.copy(),
-            )
-
-            # Apply transformations
-            if "uppercase" in config and config["uppercase"]:
-                transformed_element.value = str(transformed_element.value).upper()
-
-            if "lowercase" in config and config["lowercase"]:
-                transformed_element.value = str(transformed_element.value).lower()
-
-            if "strip" in config and config["strip"]:
-                transformed_element.value = str(transformed_element.value).strip()
-
-            if "replace" in config:
-                for old, new in config["replace"].items():
-                    transformed_element.value = str(transformed_element.value).replace(
-                        old, new
-                    )
-
-            transformed_data.append(transformed_element)
-
-        return transformed_data
-
-    def _apply_validation(
-        self, data: List[DataElement], config: Dict[str, Any]
-    ) -> List[DataElement]:
-        """Apply validation to data elements."""
-        validated_data = []
-
-        for element in data:
-            valid = True
-
-            # Apply validation rules
-            if "required" in config and config["required"] and not element.value:
-                valid = False
-
-            if (
-                "min_length" in config
-                and len(str(element.value)) < config["min_length"]
-            ):
-                valid = False
-
-            if (
-                "max_length" in config
-                and len(str(element.value)) > config["max_length"]
-            ):
-                valid = False
-
-            if "pattern" in config:
-                # Standard library imports
-                import re
-
-                if not re.match(config["pattern"], str(element.value)):
-                    valid = False
-
-            if valid:
-                validated_data.append(element)
-            else:
-                self.logger.debug(f"Validation failed for element: {element.value}")
-
-        return validated_data
-
-    def _apply_deduplication(
-        self, data: List[DataElement], config: Dict[str, Any]
-    ) -> List[DataElement]:
-        """Apply deduplication to data elements."""
-        key_field = config.get("key", "value")
-        seen_values = set()
-        deduplicated_data = []
-
-        for element in data:
-            # Determine deduplication key
-            if key_field == "value":
-                key = str(element.value)
-            elif key_field == "selector":
-                key = element.selector
-            elif key_field in element.attributes:
-                key = str(element.attributes[key_field])
-            else:
-                key = str(element.value)  # Fallback to value
-
-            if key not in seen_values:
-                seen_values.add(key)
-                deduplicated_data.append(element)
-
-        return deduplicated_data

@@ -99,6 +99,7 @@ class PlaywrightScraper(BaseScraper):
             "user_agent": user_agent,
             "java_script_enabled": pw_config.get("javascript_enabled", True),
             "accept_downloads": pw_config.get("accept_downloads", False),
+            "ignore_https_errors": pw_config.get("ignore_https_errors", False),
         }
 
         # Add geolocation if specified
