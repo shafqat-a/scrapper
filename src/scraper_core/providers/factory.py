@@ -8,8 +8,8 @@ from typing import Dict, List, Optional, Type, Union
 
 # Local folder imports
 # Local imports
-from ...providers.scrapers.base import ProviderMetadata, ScrapingProvider
-from ...providers.storage.base import ConnectionConfig, StorageProvider
+from providers.scrapers.base import ProviderMetadata, ScrapingProvider
+from providers.storage.base import ConnectionConfig, StorageProvider
 
 
 class ProviderRegistry:
@@ -99,9 +99,49 @@ class ProviderFactory:
 
     def _initialize_built_in_providers(self) -> None:
         """Register built-in providers."""
-        # Note: Actual provider classes will be imported and registered when they're implemented
-        # This is a placeholder for now
-        pass
+        try:
+            # Import and register scraping providers
+            from providers.scrapers.beautifulsoup import BeautifulSoupProvider
+            self.registry.register_scraping_provider("beautifulsoup", BeautifulSoupProvider)
+        except ImportError:
+            pass
+
+        try:
+            from providers.scrapers.playwright_provider import PlaywrightProvider
+            self.registry.register_scraping_provider("playwright", PlaywrightProvider)
+        except ImportError:
+            pass
+
+        try:
+            from providers.scrapers.scrapy_provider import ScrapyProvider
+            self.registry.register_scraping_provider("scrapy", ScrapyProvider)
+        except ImportError:
+            pass
+
+        try:
+            from providers.scrapers.bpdb_archive_provider import BPDBArchiveProvider
+            self.registry.register_scraping_provider("bpdb-archive", BPDBArchiveProvider)
+        except ImportError:
+            pass
+
+        try:
+            # Import and register storage providers
+            from providers.storage.csv_provider import CSVProvider
+            self.registry.register_storage_provider("csv", CSVProvider)
+        except ImportError:
+            pass
+
+        try:
+            from providers.storage.json_provider import JSONProvider
+            self.registry.register_storage_provider("json", JSONProvider)
+        except ImportError:
+            pass
+
+        try:
+            from providers.storage.postgresql_provider import PostgreSQLProvider
+            self.registry.register_storage_provider("postgresql", PostgreSQLProvider)
+        except ImportError:
+            pass
 
     async def create_scraping_provider(self, name: str) -> ScrapingProvider:
         """Create a scraping provider instance."""

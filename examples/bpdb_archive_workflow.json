@@ -1,0 +1,165 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "BPDB Archive PDF Extractor",
+    "description": "Extract power generation data from BPDB daily generation archive PDFs",
+    "author": "Claude Code Scraper",
+    "version": "1.0.0",
+    "created_at": "2025-09-14T12:00:00Z",
+    "target_site": "https://misc.bpdb.gov.bd/daily-generation-archive"
+  },
+  "scraping": {
+    "provider": "bpdb-archive",
+    "config": {
+      "timeout": 30000,
+      "retry_attempts": 3,
+      "rate_limit_delay": 1000,
+      "pdf_storage_path": "bpdb_pdfs/",
+      "max_concurrent_downloads": 3
+    }
+  },
+  "storage": {
+    "provider": "json",
+    "config": {
+      "output_file": "bpdb_archive_output.json",
+      "pretty_format": true,
+      "include_metadata": true
+    }
+  },
+  "data_schema": {
+    "name": "bpdb_archive_data",
+    "fields": {
+      "date": {
+        "type": "string",
+        "required": true,
+        "max_length": 20,
+        "index": true
+      },
+      "table_name": {
+        "type": "string",
+        "required": true,
+        "max_length": 50,
+        "index": true
+      },
+      "source_pdf": {
+        "type": "string",
+        "required": true,
+        "max_length": 500
+      },
+      "data_type": {
+        "type": "string",
+        "required": true,
+        "max_length": 50
+      },
+      "rows": {
+        "type": "number",
+        "required": false
+      },
+      "columns": {
+        "type": "number",
+        "required": false
+      },
+      "extracted_data": {
+        "type": "json",
+        "required": true
+      }
+    },
+    "primary_key": ["date", "table_name"]
+  },
+  "steps": [
+    {
+      "id": "init",
+      "command": "init",
+      "description": "Initialize BPDB archive scraping with date range",
+      "config": {
+        "from_date": "01/09/2025",
+        "to_date": "05/09/2025",
+        "max_pages": 20
+      }
+    },
+    {
+      "id": "discover",
+      "command": "discover",
+      "description": "Discover table structures in archive PDFs",
+      "config": {
+        "sample_size": 3,
+        "table_detection": "automatic",
+        "include_metadata": true
+      }
+    },
+    {
+      "id": "extract",
+      "command": "extract",
+      "description": "Extract data from all PDFs in date range",
+      "config": {
+        "elements": {
+          "power_supply_scenario": {
+            "selector": "table",
+            "type": "table",
+            "required": true,
+            "description": "Power supply scenario data including peaks and generation"
+          },
+          "zone_wise_generation": {
+            "selector": "table",
+            "type": "table",
+            "required": true,
+            "description": "Zone-wise power generation breakdown by fuel type"
+          },
+          "fuel_cost_summary": {
+            "selector": "table",
+            "type": "table",
+            "required": true,
+            "description": "Fuel cost summary in Taka by fuel type"
+          },
+          "interconnector_import": {
+            "selector": "table",
+            "type": "table",
+            "required": true,
+            "description": "East-West interconnector and import data"
+          }
+        },
+        "extract_all_tables": true,
+        "table_count": 5,
+        "include_source_info": true
+      }
+    }
+  ],
+  "post_processing": [
+    {
+      "type": "validate",
+      "config": {
+        "required_fields": ["date", "table_name", "extracted_data"],
+        "date_format": "DD/MM/YYYY",
+        "remove_empty_records": true
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "standardize_dates": true,
+        "normalize_table_names": true,
+        "clean_numeric_values": true
+      }
+    },
+    {
+      "type": "deduplicate",
+      "config": {
+        "key_fields": ["date", "table_name"],
+        "strategy": "keep_latest"
+      }
+    }
+  ],
+  "output": {
+    "format": "json",
+    "structure": "hierarchical",
+    "include_statistics": true,
+    "compress": false,
+    "split_by_date": false
+  },
+  "error_handling": {
+    "continue_on_error": true,
+    "max_errors": 10,
+    "log_level": "info",
+    "retry_failed_items": true
+  }
+}

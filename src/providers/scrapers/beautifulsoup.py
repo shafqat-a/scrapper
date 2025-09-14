@@ -63,8 +63,13 @@ class BeautifulSoupScraper(BaseScraper):
         }
         default_headers.update(headers)
 
-        # Create aiohttp session
-        connector = aiohttp.TCPConnector(limit=100, limit_per_host=10)
+        # Create aiohttp session with SSL verification disabled
+        verify_ssl = bs_config.get("verify_ssl", True)
+        connector = aiohttp.TCPConnector(
+            limit=100,
+            limit_per_host=10,
+            ssl=verify_ssl
+        )
         timeout_config = aiohttp.ClientTimeout(total=timeout)
 
         self._session = aiohttp.ClientSession(

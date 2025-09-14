@@ -8,8 +8,17 @@ Scrapy, Playwright, and BeautifulSoup providers.
 # Local folder imports
 from .base import BaseScraper, ProviderMetadata, ScrapingProvider
 
-__all__ = [
-    "BaseScraper",
-    "ScrapingProvider",
-    "ProviderMetadata",
-]
+try:
+    from .bpdb_archive_provider import BPDBArchiveProvider
+    __all__ = [
+        "BaseScraper",
+        "ScrapingProvider",
+        "ProviderMetadata",
+        "BPDBArchiveProvider",
+    ]
+except ImportError:
+    __all__ = [
+        "BaseScraper",
+        "ScrapingProvider",
+        "ProviderMetadata",
+    ]
